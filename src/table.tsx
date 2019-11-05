@@ -29,12 +29,11 @@ const formatMetadata = (tag: string, metadata: any) => {
   }
 
   const subject = message.params || message.arguments || message.body;
+  const className = received
+    ? 'inline-message inline-message-received'
+    : 'inline-message inline-message-send';
   return (
-    <span
-      className={
-        received ? 'inline-message inline-message-received' : 'inline-message inline-message-send'
-      }
-    >
+    <span className={className}>
       {verb}({stringifyMetadata(subject)})
     </span>
   );
@@ -42,53 +41,74 @@ const formatMetadata = (tag: string, metadata: any) => {
 
 const createColumns = (
   rows: ILogItem<any>[],
-  inspect: (row: ILogItem<any>) => void,
-): Column<ILogItem<any>>[] => [
-  {
-    key: 'level',
-    name: 'Level',
-    resizable: false,
-    width: 50,
-    formatter: ({ value }) => <>{logLevelToWord[value]}</>,
-  },
-  {
-    key: 'timestamp',
-    name: 'Timestamp',
-    resizable: true,
-    width: 120,
-    formatter: ({ value }) => <TimestampSinceEpoch value={value} epoch={rows[0].timestamp} />,
-  },
-  {
-    key: 'tag',
-    name: 'Tag',
-    resizable: true,
-    width: 120,
-  },
-  {
-    key: 'metadata',
-    name: 'Log Entry',
-    resizable: true,
-    formatter: ({ row }) => (
-      <span onClick={() => inspect(row)} className="log-data">
-        {row.message && <span className="message">{row.message}</span>}
-        {row.metadata && formatMetadata(row.tag, row.metadata)}
-      </span>
-    ),
-  },
-];
+  onLogEntryClick: (evt: React.MouseEvent) => void,
+): Column<ILogItem<any>>[] => {
+  return [
+    {
+      key: 'level',
+      name: 'Level',
+      resizable: false,
+      width: 50,
+      formatter: ({ value }) => <>{logLevelToWord[value]}</>,
+    },
+    {
+      key: 'timestamp',
+      name: 'Timestamp',
+      resizable: true,
+      width: 120,
+      formatter: ({ value }) => <TimestampSinceEpoch value={value} epoch={rows[0].timestamp} />,
+    },
+    {
+      key: 'tag',
+      name: 'Tag',
+      resizable: true,
+      width: 120,
+    },
+    {
+      key: 'metadata',
+      name: 'Log Entry',
+      resizable: true,
+      formatter: ({ row, rowIdx }) => (
+        <span onClick={onLogEntryClick} data-index={rowIdx} role="button" className="log-data">
+          {row.message && <span className="message">{row.message}</span>}
+          {row.metadata && formatMetadata(row.tag, row.metadata)}
+        </span>
+      ),
+    },
+  ];
+};
 
-export const Table: React.FC<{ rows: ILogItem<any>[], inspect(row: ILogItem<any>): void }> = ({ rows, inspect }) => {
-  const columns = React.useMemo(() => createColumns(rows, inspect), [rows, inspect]);
+export const Table: React.FC<{ rows: ILogItem<any>[]; inspect(row: ILogItem<any>): void }> = ({
+  rows,
+  inspect,
+}) => {
+  const onLogEntryClick = React.useCallback(
+    (evt: React.MouseEvent) => {
+      for (let target = evt.target as HTMLElement | null; target; target = target.parentElement) {
+        if (target.dataset.index) {
+          // loop upwards from any possible child of the cell
+          inspect(rows[Number(target.dataset.index)]);
+        }
+      }
+    },
+    [rows],
+  );
+
+  const columns = React.useMemo(() => createColumns(rows, onLogEntryClick), [
+    rows,
+    onLogEntryClick,
+  ]);
+
+  const rowGetter = React.useCallback((i: number) => rows[i], [rows]);
+  const minWidth = window.innerWidth - 250;
 
   return (
-    <>
-      <ReactDataGrid
-        columns={columns}
-        rowGetter={(i: number) => rows[i]}
-        rowsCount={rows.length}
-        minHeight={window.innerHeight}
-        minWidth={window.innerWidth - 250}
-      />
-    </>
+    <ReactDataGrid
+      columns={columns}
+      rowGetter={rowGetter}
+      rowsCount={rows.length}
+      minHeight={window.innerHeight}
+      minWidth={minWidth}
+    />
   );
 };

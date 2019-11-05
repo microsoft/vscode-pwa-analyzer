@@ -34,7 +34,7 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
     <>
       {inspectedRow && <RowInspector row={inspectedRow} rows={rows} close={closeInspector} />}
       <Table rows={renderedRows} inspect={setInspected} />
-      <Controls  data={rows} onUpdate={setRendered} />
+      <Controls data={rows} onUpdate={setRendered} />
     </>
   );
 };

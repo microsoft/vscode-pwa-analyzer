@@ -1,9 +1,8 @@
 {
   "$schema": "http://json.schemastore.org/tslint",
-  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "extends": ["tslint:recommended", "tslint-config-prettier", "tslint-microsoft-contrib/recommended"],
   "rules": {
-    "object-literal-sort-keys": false,
-    "no-bitwise": false,
-    "variable-name": false
+    "file-header": [true, "Microsoft Corporation"],
+    "no-relative-imports": false
   }
 }

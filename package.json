@@ -4,6 +4,9 @@
   "description": "Log viewer for https://github.com/microsoft/vscode-pwa",
   "main": "index.js",
   "scripts": {
+    "test": "npm run lint",
+    "fmt": "prettier --write \"src/**/*.{ts,tsx,scss}\" && npm run lint -- --fix",
+    "lint": "tslint --project tsconfig.json \"src/**/*.{ts,tsx}\"",
     "start": "webpack-dev-server --open",
     "build": "webpack --config webpack.production.js"
   },
@@ -35,6 +38,7 @@
     "ts-loader": "^6.2.1",
     "tslint": "^6.0.0-beta0",
     "tslint-config-prettier": "^1.18.0",
+    "tslint-microsoft-contrib": "^6.2.0",
     "typescript": "^3.6.4",
     "use-debounce": "^3.1.0",
     "webpack": "^4.41.2",

@@ -8,7 +8,7 @@ import * as React from 'react';
  * Selects which log tags are shown in the data.
  */
 export const MultiSelect: React.FC<{
-  values: Set<string>,
+  values: Set<string>;
   onUpdate: (tags: Set<string>) => void;
 }> = ({ values, onUpdate }) => {
   const [selectedTags, updateTags] = React.useState<Set<string>>(values);
@@ -36,11 +36,12 @@ export const MultiSelect: React.FC<{
     <select
       multiple
       value={[...selectedTags]}
+      // tslint:disable-next-line:react-a11y-no-onchange
       onChange={updateTagsCallback}
       className="tag-selector"
     >
       {[...values].map(t => (
-        <option key={t} value={t}>
+        <option key={t} value={t} aria-selected={selectedTags.has(t)}>
           {t}
         </option>
       ))}

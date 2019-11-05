@@ -18,7 +18,9 @@ export const TimestampSinceEpoch: React.FC<{ value: string | number; epoch: stri
 
   const delta = new Date(value).getTime() - new Date(epoch).getTime();
   return (
-    <span onClick={swap}>{showInterval ? formatInterval(delta) : formatTimestamp(value)}</span>
+    <span onClick={swap} role="button">
+      {showInterval ? formatInterval(delta) : formatTimestamp(value)}
+    </span>
   );
 };
 

@@ -31,6 +31,7 @@ export const RowInspector: React.FC<{
   }, [close]);
 
   return (
+    // tslint:disable-next-line:react-a11y-event-has-role
     <div className="inspector" onClick={backdropClick}>
       <div>
         <Row value={row} />

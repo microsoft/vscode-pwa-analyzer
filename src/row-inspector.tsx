@@ -50,7 +50,7 @@ const Row: React.FC<{ value: ILogItem<any> }> = ({ value }) => {
   return (
     <>
       <h1>{value.tag}</h1>
-      <ReactJson src={sanitized} />
+      <ReactJson src={sanitized} displayDataTypes={false} />
     </>
   );
 };

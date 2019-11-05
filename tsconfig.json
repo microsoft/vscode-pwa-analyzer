@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "declaration": false,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "newLine": "LF",
+    "jsx": "react",
+    "module": "esnext",
+    "target": "es6",
+    "lib": ["es6", "es7", "dom"],
+    "outDir": "dist",
+  }
+}

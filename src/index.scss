@@ -34,6 +34,21 @@ body {
   }
 }
 
+.grep-filter {
+  padding: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.log-data {
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+}
+
 .inspector {
   display: flex;
   align-items: center;
@@ -49,9 +64,11 @@ body {
   > div {
     padding: 30px;
     background: #fff;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
-  h1 {
+  h1:first-child {
     margin-top: 0;
   }
 }

@@ -4,7 +4,9 @@
 
 import * as React from 'react';
 
-export const Timestamp: React.FC<{ value: string | number }> = ({ value }) => <span>{value}</span>;
+export const Timestamp: React.FC<{ value: string | number }> = ({ value }) => (
+  <span>{formatTimestamp(value)}</span>
+);
 
 export const TimestampSinceEpoch: React.FC<{ value: string | number; epoch: string | number }> = ({
   value,
@@ -28,11 +30,17 @@ const formatTimestamp = (timestamp: string | number) => {
   return new Date(timestamp).toISOString();
 };
 
-const formatInterval = (totalMilliseconds: number) => {
+const formatInterval = (totalMilliseconds: number): string => {
+  let sign = '+';
+  if (totalMilliseconds < 0) {
+    totalMilliseconds = -totalMilliseconds;
+    sign = '-';
+  }
+
   const milliseconds = (totalMilliseconds % 1000).toString().padStart(3, '0');
   const totalSeconds = Math.floor(totalMilliseconds / 1000);
   const seconds = (totalSeconds % 60).toString().padStart(2, '0');
   const totalMinutes = Math.floor(totalSeconds / 60);
 
-  return `${totalMinutes}:${seconds}.${milliseconds}`;
+  return `${sign}${totalMinutes}:${seconds}.${milliseconds}`;
 };

@@ -40,7 +40,7 @@ export const MultiSelect: React.FC<{
       onChange={updateTagsCallback}
       className="tag-selector"
     >
-      {[...values].map(t => (
+      {[...values].sort().map(t => (
         <option key={t} value={t} aria-selected={selectedTags.has(t)}>
           {t}
         </option>

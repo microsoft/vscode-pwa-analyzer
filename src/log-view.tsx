@@ -29,11 +29,12 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
   const [inspectedRow, setInspected] = React.useState<ILogItem<any> | null>(null);
   const closeInspector = React.useCallback(() => setInspected(null), [setInspected]);
   const [renderedRows, setRendered] = React.useState<ILogItem<any>[]>([]);
+  const epoch = rows.length ? rows[0].timestamp : 0;
 
   return (
     <>
       {inspectedRow && <RowInspector row={inspectedRow} rows={rows} close={closeInspector} />}
-      <Table rows={renderedRows} inspect={setInspected} />
+      <Table epoch={epoch} rows={renderedRows} inspect={setInspected} />
       <Controls data={rows} onUpdate={setRendered} />
     </>
   );

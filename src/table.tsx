@@ -18,7 +18,7 @@ const formatUnknownMetadata = (metadata: any) => {
 // ad-hoc formatting
 const formatMetadata = (tag: string, metadata: any) => {
   const { message } = metadata;
-  if (protocolTags.includes(tag)) {
+  if (!protocolTags.includes(tag)) {
     return formatUnknownMetadata(metadata);
   }
 
@@ -40,7 +40,7 @@ const formatMetadata = (tag: string, metadata: any) => {
 };
 
 const createColumns = (
-  rows: ILogItem<any>[],
+  epoch: number,
   onLogEntryClick: (evt: React.MouseEvent) => void,
 ): Column<ILogItem<any>>[] => {
   return [
@@ -56,7 +56,7 @@ const createColumns = (
       name: 'Timestamp',
       resizable: true,
       width: 120,
-      formatter: ({ value }) => <TimestampSinceEpoch value={value} epoch={rows[0].timestamp} />,
+      formatter: ({ value }) => <TimestampSinceEpoch value={value} epoch={epoch} />,
     },
     {
       key: 'tag',
@@ -71,6 +71,7 @@ const createColumns = (
       formatter: ({ row, rowIdx }) => (
         <span onClick={onLogEntryClick} data-index={rowIdx} role="button" className="log-data">
           {row.message && <span className="message">{row.message}</span>}
+          {row.message && row.metadata && ': '}
           {row.metadata && formatMetadata(row.tag, row.metadata)}
         </span>
       ),
@@ -78,10 +79,11 @@ const createColumns = (
   ];
 };
 
-export const Table: React.FC<{ rows: ILogItem<any>[]; inspect(row: ILogItem<any>): void }> = ({
-  rows,
-  inspect,
-}) => {
+export const Table: React.FC<{
+  epoch: number;
+  rows: ILogItem<any>[];
+  inspect(row: ILogItem<any>): void;
+}> = ({ epoch, rows, inspect }) => {
   const onLogEntryClick = React.useCallback(
     (evt: React.MouseEvent) => {
       for (let target = evt.target as HTMLElement | null; target; target = target.parentElement) {
@@ -94,7 +96,7 @@ export const Table: React.FC<{ rows: ILogItem<any>[]; inspect(row: ILogItem<any>
     [rows],
   );
 
-  const columns = React.useMemo(() => createColumns(rows, onLogEntryClick), [
+  const columns = React.useMemo(() => createColumns(epoch, onLogEntryClick), [
     rows,
     onLogEntryClick,
   ]);

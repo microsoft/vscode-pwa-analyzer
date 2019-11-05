@@ -14,4 +14,4 @@ jobs:
         BASE_BRANCH: master
         BRANCH: gh-pages
         FOLDER: dist
-        BUILD_SCRIPT: npm ci && npm run build
+        BUILD_SCRIPT: npm ci && npm run build && touch dist/.nojekyll

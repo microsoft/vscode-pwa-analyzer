@@ -1,3 +1,14 @@
+# vscode-pwa-analyzer
+
+This repo contains a simple tool to help view log files emitted by the [vscode-pwa extension](https://github.com/microsoft/vscode-pwa). We use it to debug issues with the adapter, and you might find it useful as well if you want to contribute to the extension.
+
+First, you'll need to create a log file, which you can do by setting `trace: true` in your `launch.json`. The next time you debug your code, the debug console will print where the log file is stored. You can upload that file to this tool. To do that:
+
+ 1. Clone this repository;
+ 2. Open the repository in your terminal, and run `npm install`;
+ 3. Run `npm start`, which will open the web UI on localhost:8080.
+
+The web UI will contain a field where you can upload your collected log file.
 
 # Contributing
 

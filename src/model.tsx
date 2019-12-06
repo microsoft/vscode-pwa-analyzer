@@ -34,6 +34,7 @@ export const wordToLogLevel = {
 
 export interface ILogItem<T = any> {
   _raw: string;
+  _index: number;
   timestamp: number;
   message?: string;
   metadata?: T;

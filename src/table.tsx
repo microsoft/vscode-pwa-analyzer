@@ -92,9 +92,9 @@ export const Table: React.FC<{
     ({ renderBaseRow, ...props }) => (
       <div
         role="button"
-        className={classes(selectedRows.includes(props.idx) && 'row-selected')}
+        className={classes(selectedRows.includes(props.row._index) && 'row-selected')}
         onClick={onRowClick}
-        data-index={props.idx}
+        data-index={props.row._index}
       >
         {renderBaseRow(props)}
       </div>

@@ -43,7 +43,7 @@ export const RowInspector: React.FC<{
 
 const Row: React.FC<{ value: ILogItem<any> }> = ({ value }) => {
   const sanitized = React.useMemo(() => {
-    const { _raw, ...rest } = value;
+    const { _raw, _index, ...rest } = value;
     return rest;
   }, [value]);
 

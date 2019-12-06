@@ -62,7 +62,7 @@ export class RowSelection {
 
     const next: number[] = [];
     let rowIndex = 0;
-    for (let row = min; row < max; row++) {
+    for (let row = min; row <= max; row++) {
       if (this.rows[rowIndex] === row) {
         rowIndex++;
         next.push(row);

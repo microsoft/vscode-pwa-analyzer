@@ -23,7 +23,8 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
             // ignored
           }
         })
-        .filter((v: unknown): v is ILogItem<any> => !!v),
+        .filter((v: unknown): v is ILogItem<any> => !!v)
+        .map((v, i) => ({ _index: i, ...v })),
     [file],
   );
 

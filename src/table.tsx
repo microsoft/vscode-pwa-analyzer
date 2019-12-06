@@ -3,45 +3,15 @@
  *--------------------------------------------------------*/
 
 import * as React from 'react';
-import { ILogItem, protocolTags, logLevelToWord } from './model';
+import { ILogItem, logLevelToWord } from './model';
+import { TableMetadata } from './table-metadata';
 import { TimestampSinceEpoch } from './timestamp';
-import ReactDataGrid, { Column } from 'react-data-grid';
-
-const stringifyMetadata = (metadata: any) => {
-  return metadata === undefined ? 'undefined' : JSON.stringify(metadata).slice(0, 200);
-};
-
-const formatUnknownMetadata = (metadata: any) => {
-  return <span className="inline-message">{stringifyMetadata(metadata)}</span>;
-};
-
-// ad-hoc formatting
-const formatMetadata = (tag: string, metadata: any) => {
-  const { message } = metadata;
-  if (!protocolTags.includes(tag)) {
-    return formatUnknownMetadata(metadata);
-  }
-
-  const received = tag.endsWith('.receive');
-  const verb = message.event || message.method || message.command;
-  if (!verb) {
-    return formatUnknownMetadata(metadata);
-  }
-
-  const subject = message.params || message.arguments || message.body;
-  const className = received
-    ? 'inline-message inline-message-received'
-    : 'inline-message inline-message-send';
-  return (
-    <span className={className}>
-      {verb}({stringifyMetadata(subject)})
-    </span>
-  );
-};
+import ReactDataGrid, { Column, IRowRendererProps } from 'react-data-grid';
+import { classes } from './helpers';
 
 const createColumns = (
   epoch: number,
-  onLogEntryClick: (evt: React.MouseEvent) => void,
+  onLogEntryClick: (item: ILogItem) => void,
 ): Column<ILogItem<any>>[] => {
   return [
     {
@@ -68,40 +38,75 @@ const createColumns = (
       key: 'metadata',
       name: 'Log Entry',
       resizable: true,
-      formatter: ({ row, rowIdx }) => (
-        <span onClick={onLogEntryClick} data-index={rowIdx} role="button" className="log-data">
-          {row.message && <span className="message">{row.message}</span>}
-          {row.message && row.metadata && ': '}
-          {row.metadata && formatMetadata(row.tag, row.metadata)}
-        </span>
-      ),
+      formatter: ({ row }) => <TableMetadata item={row} onClick={onLogEntryClick} />,
     },
   ];
+};
+
+/**
+ * The default provided props are missing `renderBaseRow`, but it actually
+ * exists. Fix that!
+ */
+type RowRendererProps = IRowRendererProps<ILogItem> & {
+  renderBaseRow: (props: IRowRendererProps<ILogItem>) => React.ReactElement;
 };
 
 export const Table: React.FC<{
   epoch: number;
   rows: ILogItem<any>[];
+  selectedRows: ReadonlyArray<number>;
+  setSelectedRows(rows: number[]): void;
   inspect(row: ILogItem<any>): void;
-}> = ({ epoch, rows, inspect }) => {
-  const onLogEntryClick = React.useCallback(
+}> = ({ epoch, rows, inspect, selectedRows, setSelectedRows }) => {
+  const columns = React.useMemo(() => createColumns(epoch, inspect), [rows, inspect]);
+  const rowGetter = React.useCallback((i: number) => rows[i], [rows]);
+
+  const onRowClick = React.useCallback(
     (evt: React.MouseEvent) => {
+      let index: number | undefined;
       for (let target = evt.target as HTMLElement | null; target; target = target.parentElement) {
         if (target.dataset.index) {
           // loop upwards from any possible child of the cell
-          inspect(rows[Number(target.dataset.index)]);
+          index = Number(target.dataset.index);
+          break;
         }
       }
+
+      if (index === undefined) {
+        return;
+      }
+
+      if (evt.ctrlKey || evt.metaKey) {
+        setSelectedRows(selectedRows.concat(index));
+      } else if (!evt.shiftKey || !selectedRows.length) {
+        setSelectedRows([index]);
+      } else {
+        const next = selectedRows.slice();
+        const bound = selectedRows[selectedRows.length - 1];
+        const step = bound > index ? 1 : -1;
+        for (; index !== bound; index += step) {
+          next.push(index);
+        }
+        setSelectedRows(next);
+      }
     },
-    [rows],
+    [selectedRows, setSelectedRows],
   );
 
-  const columns = React.useMemo(() => createColumns(epoch, onLogEntryClick), [
-    rows,
-    onLogEntryClick,
-  ]);
+  const rowRenderer: React.FC<RowRendererProps> = React.useCallback(
+    ({ renderBaseRow, ...props }) => (
+      <div
+        role="button"
+        className={classes(selectedRows.includes(props.idx) && 'row-selected')}
+        onClick={onRowClick}
+        data-index={props.idx}
+      >
+        {renderBaseRow(props)}
+      </div>
+    ),
+    [onRowClick, selectedRows],
+  );
 
-  const rowGetter = React.useCallback((i: number) => rows[i], [rows]);
   const minWidth = window.innerWidth - 250;
 
   return (
@@ -109,6 +114,7 @@ export const Table: React.FC<{
       columns={columns}
       rowGetter={rowGetter}
       rowsCount={rows.length}
+      rowRenderer={rowRenderer}
       minHeight={window.innerHeight}
       minWidth={minWidth}
     />

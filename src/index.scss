@@ -40,15 +40,6 @@ body {
   box-sizing: border-box;
 }
 
-.log-data {
-  cursor: pointer;
-  max-width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  display: block;
-}
-
 .inspector {
   display: flex;
   align-items: center;
@@ -84,5 +75,35 @@ body {
 
   p {
     margin-bottom: 30px;
+  }
+}
+
+.row-selected > .rdg-row {
+  background: #eee;
+}
+
+.inline-message {
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+
+  &-send::before {
+    content: '←';
+  }
+
+  &-receive::before {
+    content: '→';
+  }
+
+  &-send::before,
+  &-receive::before {
+    opacity: 0.5;
+  }
+
+  &-matched {
+    color: red;
   }
 }

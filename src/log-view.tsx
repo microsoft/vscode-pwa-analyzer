@@ -26,6 +26,7 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
     [file],
   );
 
+  const [selectedRows, setSelectedRows] = React.useState<number[]>([]);
   const [inspectedRow, setInspected] = React.useState<ILogItem<any> | null>(null);
   const closeInspector = React.useCallback(() => setInspected(null), [setInspected]);
   const [renderedRows, setRendered] = React.useState<ILogItem<any>[]>([]);
@@ -34,7 +35,13 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
   return (
     <>
       {inspectedRow && <RowInspector row={inspectedRow} rows={rows} close={closeInspector} />}
-      <Table epoch={epoch} rows={renderedRows} inspect={setInspected} />
+      <Table
+        epoch={epoch}
+        rows={renderedRows}
+        inspect={setInspected}
+        selectedRows={selectedRows}
+        setSelectedRows={setSelectedRows}
+      />
       <Controls data={rows} onUpdate={setRendered} />
     </>
   );

@@ -2,12 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "chrome",
+      "type": "pwa-chrome",
       "request": "launch",
-      "name": "webpack-dev-server",
+      "name": "launch and serve",
       "url": "http://localhost:8080",
       "webRoot": "${workspaceRoot}",
-      "preLaunchTask": "npm: start"
+      "server": {
+        "command": "npm start"
+      }
+    },
+    {
+      "type": "pwa-chrome",
+      "request": "launch",
+      "name": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceRoot}",
     }
   ]
 }

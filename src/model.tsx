@@ -32,7 +32,7 @@ export const wordToLogLevel = {
   FATAL: LogLevel.Fatal,
 };
 
-export interface ILogItem<T> {
+export interface ILogItem<T = any> {
   _raw: string;
   timestamp: number;
   message?: string;
@@ -60,21 +60,107 @@ export const protocolTags: string[] = [
   LogTag.DapReceive,
 ];
 
-export const isRecipocalPair = (a: ILogItem<any>, b: ILogItem<any>) => {
-  if (a.tag === LogTag.DapReceive || a.tag === LogTag.CdpReceive) {
-    [a, b] = [b, a];
+export const isReceive = ({ tag }: ILogItem) =>
+  tag === LogTag.CdpReceive || tag === LogTag.DapReceive;
+
+export const isSend = ({ tag }: ILogItem) => tag === LogTag.CdpSend || tag === LogTag.DapSend;
+
+export const isDap = ({ tag }: ILogItem) => tag === LogTag.DapSend || tag === LogTag.DapReceive;
+
+export const isCdp = ({ tag }: ILogItem) => tag === LogTag.CdpReceive || tag === LogTag.CdpSend;
+
+/**
+ * Returns if the item is a CDP or DAP response.
+ */
+export const isRequest = (item: ILogItem) => {
+  if (isCdp(item)) {
+    return !!item.metadata.message.method;
   }
 
-  const messageA = a.metadata && a.metadata.message;
-  const messageB = b.metadata && b.metadata.message;
-
-  if (a.tag === LogTag.DapSend) {
-    return b.tag === LogTag.DapReceive && messageA.seq === messageB.request_seq;
-  }
-
-  if (a.tag === LogTag.CdpSend) {
-    return b.tag === LogTag.CdpReceive && messageB.id === messageA.id;
+  if (isDap(item)) {
+    return item.metadata.message.type === 'request';
   }
 
   return false;
+};
+
+/**
+ * Returns if the item is a CDP or DAP response.
+ */
+export const isResponse = (item: ILogItem) => {
+  if (isCdp(item)) {
+    return !!item.metadata.message.result;
+  }
+
+  if (isDap(item)) {
+    return item.metadata.message.type === 'response';
+  }
+
+  return false;
+};
+
+/**
+ * Gets the request method and parameters.
+ */
+export const requestParams = (item: ILogItem) => {
+  if (isDap(item) && item.metadata.message.type === 'event') {
+    return { method: item.metadata.message.event, params: item.metadata.message.body };
+  }
+
+  if (!isRequest(item)) {
+    return undefined;
+  }
+
+  if (isCdp(item)) {
+    return { method: item.metadata.message.method, params: item.metadata.message.params };
+  }
+
+  if (isDap(item)) {
+    return { method: item.metadata.message.command, params: item.metadata.message.arguments };
+  }
+
+  return undefined;
+};
+
+/**
+ * Returns the response data for the given row
+ */
+export const responseData = (item: ILogItem) => {
+  if (!isResponse(item)) {
+    return undefined;
+  }
+
+  return isDap(item) ? item.metadata.message.body : item.metadata.message.result;
+};
+
+/**
+ * Returns an ID representing a reciprocal pair for the log item.
+ */
+export const getReciprocalId = (item: ILogItem) => {
+  if (isCdp(item)) {
+    return `cdp-${item.metadata.message.id}`;
+  }
+
+  if (isDap(item)) {
+    return isRequest(item)
+      ? `dap-${item.metadata.message.seq}`
+      : isResponse(item)
+      ? `dap-${item.metadata.message.request_seq}`
+      : undefined;
+  }
+
+  return undefined;
+};
+
+/**
+ * Gets whether the two items are a request/response pair.
+ */
+export const isRecipocalPair = (a: ILogItem, b: ILogItem): boolean => {
+  if (a.tag === b.tag) {
+    return false;
+  }
+
+  const idA = getReciprocalId(a);
+  const idB = getReciprocalId(b);
+  return !!idA && idA === idB;
 };

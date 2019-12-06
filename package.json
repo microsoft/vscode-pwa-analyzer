@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/microsoft/vscode-pwa-analyzer#readme",
   "devDependencies": {
+    "@types/lodash-es": "^4.17.3",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.3",
     "bootstrap": "^4.3.1",
@@ -50,5 +51,8 @@
     "singleQuote": true,
     "printWidth": 100,
     "tabWidth": 2
+  },
+  "dependencies": {
+    "lodash-es": "^4.17.15"
   }
 }

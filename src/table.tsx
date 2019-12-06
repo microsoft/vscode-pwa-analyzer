@@ -8,6 +8,7 @@ import { TableMetadata } from './table-metadata';
 import { TimestampSinceEpoch } from './timestamp';
 import ReactDataGrid, { Column, IRowRendererProps } from 'react-data-grid';
 import { classes } from './helpers';
+import { RowSelection } from './row-selection';
 
 const createColumns = (
   epoch: number,
@@ -54,8 +55,8 @@ type RowRendererProps = IRowRendererProps<ILogItem> & {
 export const Table: React.FC<{
   epoch: number;
   rows: ILogItem<any>[];
-  selectedRows: ReadonlyArray<number>;
-  setSelectedRows(rows: number[]): void;
+  selectedRows: RowSelection;
+  setSelectedRows(rows: RowSelection): void;
   inspect(row: ILogItem<any>): void;
 }> = ({ epoch, rows, inspect, selectedRows, setSelectedRows }) => {
   const columns = React.useMemo(() => createColumns(epoch, inspect), [rows, inspect]);
@@ -63,31 +64,25 @@ export const Table: React.FC<{
 
   const onRowClick = React.useCallback(
     (evt: React.MouseEvent) => {
-      let index: number | undefined;
+      let row: number | undefined;
       for (let target = evt.target as HTMLElement | null; target; target = target.parentElement) {
         if (target.dataset.index) {
           // loop upwards from any possible child of the cell
-          index = Number(target.dataset.index);
+          row = Number(target.dataset.index);
           break;
         }
       }
 
-      if (index === undefined) {
+      if (row === undefined) {
         return;
       }
 
       if (evt.ctrlKey || evt.metaKey) {
-        setSelectedRows(selectedRows.concat(index));
-      } else if (!evt.shiftKey || !selectedRows.length) {
-        setSelectedRows([index]);
+        setSelectedRows(selectedRows.toggle(row));
+      } else if (evt.shiftKey) {
+        setSelectedRows(selectedRows.range(row));
       } else {
-        const next = selectedRows.slice();
-        const bound = selectedRows[selectedRows.length - 1];
-        const step = bound > index ? 1 : -1;
-        for (; index !== bound; index += step) {
-          next.push(index);
-        }
-        setSelectedRows(next);
+        setSelectedRows(selectedRows.single(row));
       }
     },
     [selectedRows, setSelectedRows],

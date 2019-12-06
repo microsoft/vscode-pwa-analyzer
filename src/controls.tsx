@@ -6,42 +6,56 @@ import * as React from 'react';
 import { ILogItem, wordToLogLevel, LogLevel } from './model';
 import { Timestamp } from './timestamp';
 import { MultiSelect } from './multi-select';
-import { useDebouncedCallback } from 'use-debounce';
+import { RowSelection } from './row-selection';
+
+export interface IFilter {
+  name: string;
+  test(row: ILogItem, index: number): boolean;
+}
 
 /**
  * Bottom controls for the data.
  */
 export const Controls: React.FC<{
   data: ILogItem<any>[];
+  selection: RowSelection;
   onUpdate: (filtered: ILogItem<any>[]) => void;
-}> = ({ data, onUpdate }) => {
+}> = ({ data, onUpdate, selection }) => {
   const [selectedTags, updateTags] = React.useState(new Set<string>());
   const [selectedLevels, updateLevels] = React.useState(new Set<LogLevel>());
-  const [selectedPatterns, updatePatterns] = React.useState<string | RegExp>('');
+  const [customFilters, setCustomFilters] = React.useState<ReadonlyArray<IFilter>>([]);
   const [filteredRows, setFilteredRows] = React.useState({ length: data.length, time: '0' });
 
   React.useEffect(() => {
     const start = performance.now();
-    const filtered = data.filter(
-      d =>
-        selectedTags.has(d.tag) &&
-        selectedLevels.has(d.level) &&
-        (typeof selectedPatterns === 'string'
-          ? d._raw.includes(selectedPatterns)
-          : selectedPatterns.test(d._raw)),
-    );
+    const filtered = data.filter((row, i) => {
+      if (!selectedTags.has(row.tag)) {
+        return false;
+      }
+      if (!selectedLevels.has(row.level)) {
+        return false;
+      }
+
+      for (const filter of customFilters) {
+        if (!filter.test(row, i)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
     const end = performance.now();
 
     setFilteredRows({ length: filtered.length, time: (end - start).toFixed(2) });
     onUpdate(filtered);
-  }, [selectedTags, selectedLevels, selectedPatterns]);
+  }, [selectedTags, selectedLevels, customFilters]);
 
   return (
     <div className="controls">
       {filteredRows.length} / {data.length} rows in {filteredRows.time}ms
       <TagSelector data={data} onUpdate={updateTags} />
       <LevelSelector onUpdate={updateLevels} />
-      <GrepFilter onUpdate={updatePatterns} />
+      <Filters selection={selection} filters={customFilters} onUpdate={setCustomFilters} />
       <SystemInfo data={data} />
     </div>
   );
@@ -82,33 +96,103 @@ const SystemInfo: React.FC<{ data: ILogItem<any>[] }> = ({ data }) => {
  * Selects which log tags are shown in the data.
  */
 const GrepFilter: React.FC<{
-  onUpdate: (filter: string | RegExp) => void;
-}> = ({ onUpdate }) => {
-  const [debouncedInputChange] = useDebouncedCallback(
-    (filter: string | RegExp) => onUpdate(filter),
-    500,
+  addFilter(filter: IFilter): void;
+}> = ({ addFilter }) => {
+  const [input, setInput] = React.useState('');
+  const [inverted, setInverted] = React.useState(false);
+  const onInvertedChange = React.useCallback(
+    (evt: React.ChangeEvent<HTMLInputElement>) => setInverted(evt.target.checked),
+    [setInverted],
   );
 
   const onInputChange = React.useCallback(
-    (evt: React.ChangeEvent<HTMLInputElement>) => {
-      const reParts = /^\/(.+)\/([a-z]*)$/.exec(evt.target.value);
+    (evt: React.ChangeEvent<HTMLInputElement>) => setInput(evt.target.value),
+    [setInput],
+  );
+
+  const add = React.useCallback(
+    (evt: React.FormEvent) => {
+      evt.preventDefault();
+
+      const reParts = /^\/(.+)\/([a-z]*)$/.exec(input);
+      const name = `grep ${reParts ? '-e ' : ''} ${reParts ? '-v ' : ''} ${input}`;
       if (reParts) {
-        debouncedInputChange(new RegExp(reParts[1], reParts[2]));
+        const re = new RegExp(reParts[1], reParts[2]);
+        // (inverted) XOR (is a match)
+        addFilter({ name, test: r => inverted !== re.test(r._raw) });
       } else {
-        debouncedInputChange(evt.target.value);
+        addFilter({ name, test: r => inverted !== r._raw.includes(input) });
       }
+
+      setInput('');
     },
-    [debouncedInputChange],
+    [addFilter, setInput, inverted, input],
   );
 
   return (
     <>
-      <h3>Grep Filter</h3>
-      <input
-        placeholder="A substring or /regex/i"
-        onChange={onInputChange}
-        className="grep-filter"
-      />
+      <h3>Grep</h3>
+      <form onSubmit={add}>
+        <input
+          placeholder="A substring or /regex/i"
+          onChange={onInputChange}
+          value={input}
+          className="grep-filter"
+        />
+        <div className="form-control-row">
+          <input
+            type="checkbox"
+            checked={inverted}
+            onChange={onInvertedChange}
+            aria-checked={inverted}
+            value="Invert"
+          />{' '}
+          Invert
+          <span style={{ flex: 1 }} />
+          <input type="submit" aria-label="Add Filter" onClick={add} value="Add" />
+        </div>
+      </form>
+    </>
+  );
+};
+
+const Filters: React.FC<{
+  selection: RowSelection;
+  filters: ReadonlyArray<IFilter>;
+  onUpdate(filters: ReadonlyArray<IFilter>): void;
+}> = ({ selection, filters, onUpdate }) => {
+  const filterValues = React.useMemo(() => filters.map((_, i) => String(i)), [filters]);
+  const filterNames = React.useMemo(() => filters.map(f => f.name), [filters]);
+  const [selectedFilters, setSelectedFilters] = React.useState<ReadonlyArray<string>>([]);
+
+  const removeFilter = React.useCallback(() => {
+    const indices = new Set(selectedFilters.map(f => Number(f)));
+    onUpdate(filters.filter((_, i) => !indices.has(i)));
+  }, [selectedFilters, filters, onUpdate]);
+
+  const addFilter = React.useCallback((filter: IFilter) => onUpdate([...filters, filter]), [
+    filters,
+    onUpdate,
+  ]);
+
+  const filterToSelection = React.useCallback(() => {
+    const rows = selection.entries();
+    addFilter({ name: `Filter to ${rows.size} rows`, test: (_, i) => rows.has(i) });
+  }, [addFilter, selection]);
+
+  return (
+    <>
+      <GrepFilter addFilter={addFilter} />
+      <h3>Filters</h3>
+      <MultiSelect values={filterValues} labels={filterNames} onUpdate={setSelectedFilters} />
+      <div className="form-control-row">
+        <button onClick={removeFilter} disabled={!selectedFilters.length}>
+          Remove
+        </button>
+        <button onClick={filterToSelection} disabled={selection.empty}>
+          Filter Selected Rows
+        </button>
+      </div>
     </>
   );
 };
@@ -119,9 +203,9 @@ const GrepFilter: React.FC<{
 const LevelSelector: React.FC<{
   onUpdate: (tags: Set<LogLevel>) => void;
 }> = ({ onUpdate }) => {
-  const words = React.useMemo(() => new Set(Object.keys(wordToLogLevel)), []);
+  const words = React.useMemo(() => Object.keys(wordToLogLevel), []);
   const onUpdateFromWords = React.useCallback(
-    (newWords: Set<string>) =>
+    (newWords: ReadonlyArray<string>) =>
       onUpdate(new Set([...newWords].map(w => wordToLogLevel[w as keyof typeof wordToLogLevel]))),
     [onUpdate],
   );
@@ -146,13 +230,17 @@ const TagSelector: React.FC<{
     for (const row of data) {
       s.add(row.tag);
     }
-    return s;
+    return [...s];
   }, [data]);
+
+  const onUpdateFromArray = React.useCallback((t: ReadonlyArray<string>) => onUpdate(new Set(t)), [
+    onUpdate,
+  ]);
 
   return (
     <>
       <h3>Tag Filter</h3>
-      <MultiSelect values={tags} onUpdate={onUpdate} />
+      <MultiSelect values={tags} onUpdate={onUpdateFromArray} />
     </>
   );
 };

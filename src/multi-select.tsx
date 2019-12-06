@@ -8,20 +8,21 @@ import * as React from 'react';
  * Selects which log tags are shown in the data.
  */
 export const MultiSelect: React.FC<{
-  values: Set<string>;
-  onUpdate: (tags: Set<string>) => void;
-}> = ({ values, onUpdate }) => {
-  const [selectedTags, updateTags] = React.useState<Set<string>>(values);
+  values: ReadonlyArray<string>;
+  labels?: ReadonlyArray<string>;
+  onUpdate: (tags: ReadonlyArray<string>) => void;
+}> = ({ values, onUpdate, labels }) => {
+  const [selectedTags, updateTags] = React.useState<ReadonlyArray<string>>(values);
   const updateTagsCallback = React.useCallback(
     (evt: React.ChangeEvent<HTMLSelectElement>) => {
       const options = evt.target.options;
-      const result = new Set<string>();
+      const result: string[] = [];
 
       // Not actually iterable, yea it's silly:
       // tslint:disable-next-line
       for (let i = 0; i < options.length; i++) {
         if (options[i].selected) {
-          result.add(options[i].value);
+          result.push(options[i].value);
         }
       }
 
@@ -40,9 +41,9 @@ export const MultiSelect: React.FC<{
       onChange={updateTagsCallback}
       className="tag-selector"
     >
-      {[...values].sort().map(t => (
-        <option key={t} value={t} aria-selected={selectedTags.has(t)}>
-          {t}
+      {[...values].sort().map((t, i) => (
+        <option key={t} value={t} aria-selected={selectedTags.includes(t)}>
+          {labels ? labels[i] : t}
         </option>
       ))}
     </select>

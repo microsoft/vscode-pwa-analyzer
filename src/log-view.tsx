@@ -7,6 +7,7 @@ import { ILogItem } from './model';
 import { Table } from './table';
 import { Controls } from './controls';
 import { RowInspector } from './row-inspector';
+import { RowSelection } from './row-selection';
 
 export const LogView: React.FC<{ file: string }> = ({ file }) => {
   const rows = React.useMemo(
@@ -26,7 +27,7 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
     [file],
   );
 
-  const [selectedRows, setSelectedRows] = React.useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = React.useState(RowSelection.empty);
   const [inspectedRow, setInspected] = React.useState<ILogItem<any> | null>(null);
   const closeInspector = React.useCallback(() => setInspected(null), [setInspected]);
   const [renderedRows, setRendered] = React.useState<ILogItem<any>[]>([]);
@@ -42,7 +43,7 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
         selectedRows={selectedRows}
         setSelectedRows={setSelectedRows}
       />
-      <Controls data={rows} onUpdate={setRendered} />
+      <Controls selection={selectedRows} data={rows} onUpdate={setRendered} />
     </>
   );
 };

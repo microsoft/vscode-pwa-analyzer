@@ -21,6 +21,19 @@ body {
 .controls {
   width: $controls-width;
   padding: 8px;
+
+  button,
+  input[type='submit'] {
+    padding: 3px;
+    margin: 3px;
+    border-radius: 0;
+    background: #eee;
+  }
+}
+
+.form-control-row {
+  display: flex;
+  align-items: center;
 }
 
 .tag-selector {

@@ -115,7 +115,7 @@ const GrepFilter: React.FC<{
       evt.preventDefault();
 
       const reParts = /^\/(.+)\/([a-z]*)$/.exec(input);
-      const name = `grep ${reParts ? '-e ' : ''} ${reParts ? '-v ' : ''} ${input}`;
+      const name = `grep ${reParts ? '-e ' : ''} ${inverted ? '-v ' : ''} ${input}`;
       if (reParts) {
         const re = new RegExp(reParts[1], reParts[2]);
         // (inverted) XOR (is a match)

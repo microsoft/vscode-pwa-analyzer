@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as React from 'react';
-import { ILogItem, wordToLogLevel, LogLevel } from './model';
+import { ILogItem, wordToLogLevel, LogLevel, isDap, isCdp } from './model';
 import { Timestamp } from './timestamp';
 import { MultiSelect } from './multi-select';
 import { RowSelection } from './row-selection';
@@ -20,11 +20,34 @@ export const Controls: React.FC<{
   data: ILogItem<any>[];
   selection: RowSelection;
   onUpdate: (filtered: ILogItem<any>[]) => void;
-}> = ({ data, onUpdate, selection }) => {
+  onHighlight: (rows: ReadonlySet<number>) => void;
+}> = ({ data, onUpdate, onHighlight, selection }) => {
   const [selectedTags, updateTags] = React.useState(new Set<string>());
   const [selectedLevels, updateLevels] = React.useState(new Set<LogLevel>());
-  const [customFilters, setCustomFilters] = React.useState<ReadonlyArray<IFilter>>([]);
+  const [customFilters, setCustomFilters] = React.useState<ReadonlyArray<IFilter>>([
+    createFilter('telemetry', true),
+  ]);
+  const [connectionFilters, setConnectionFilters] = React.useState<
+    ReadonlyArray<(row: ILogItem) => boolean>
+  >([]);
   const [filteredRows, setFilteredRows] = React.useState({ length: data.length, time: '0' });
+  const [highlightRows, setHighlightedRows] = React.useState<ReadonlySet<number>>(new Set());
+
+  const toggleHighlight = React.useCallback(
+    (rows: ReadonlySet<number>) => {
+      const nextRows = new Set([...highlightRows]);
+
+      if (![...rows].some(r => !highlightRows.has(r))) {
+        rows.forEach(r => nextRows.delete(r));
+      } else {
+        rows.forEach(r => nextRows.add(r));
+      }
+
+      setHighlightedRows(nextRows);
+      onHighlight(nextRows);
+    },
+    [highlightRows, onHighlight],
+  );
 
   React.useEffect(() => {
     const start = performance.now();
@@ -42,20 +65,32 @@ export const Controls: React.FC<{
         }
       }
 
+      for (const filter of connectionFilters) {
+        if (!filter(row)) {
+          return false;
+        }
+      }
+
       return true;
     });
     const end = performance.now();
 
     setFilteredRows({ length: filtered.length, time: (end - start).toFixed(2) });
     onUpdate(filtered);
-  }, [selectedTags, selectedLevels, customFilters]);
+  }, [selectedTags, selectedLevels, customFilters, connectionFilters]);
 
   return (
     <div className="controls">
       {filteredRows.length} / {data.length} rows in {filteredRows.time}ms
       <TagSelector data={data} onUpdate={updateTags} />
       <LevelSelector onUpdate={updateLevels} />
-      <Filters selection={selection} filters={customFilters} onUpdate={setCustomFilters} />
+      <ConnectionSelector data={data} onUpdate={setConnectionFilters} />
+      <Filters
+        selection={selection}
+        filters={customFilters}
+        onHighlight={toggleHighlight}
+        onUpdate={setCustomFilters}
+      />
       <SystemInfo data={data} />
     </div>
   );
@@ -92,6 +127,18 @@ const SystemInfo: React.FC<{ data: ILogItem<any>[] }> = ({ data }) => {
   );
 };
 
+const createFilter = (input: string, inverted: boolean): IFilter => {
+  const reParts = /^\/(.+)\/([a-z]*)$/.exec(input);
+  const name = `grep ${reParts ? '-e ' : ''} ${inverted ? '-v ' : ''} ${input}`;
+  if (reParts) {
+    const re = new RegExp(reParts[1], reParts[2]);
+    // (inverted) XOR (is a match)
+    return { name, test: r => inverted !== re.test(r._raw) };
+  } else {
+    return { name, test: r => inverted !== r._raw.includes(input) };
+  }
+};
+
 /**
  * Selects which log tags are shown in the data.
  */
@@ -113,17 +160,7 @@ const GrepFilter: React.FC<{
   const add = React.useCallback(
     (evt: React.FormEvent) => {
       evt.preventDefault();
-
-      const reParts = /^\/(.+)\/([a-z]*)$/.exec(input);
-      const name = `grep ${reParts ? '-e ' : ''} ${inverted ? '-v ' : ''} ${input}`;
-      if (reParts) {
-        const re = new RegExp(reParts[1], reParts[2]);
-        // (inverted) XOR (is a match)
-        addFilter({ name, test: r => inverted !== re.test(r._raw) });
-      } else {
-        addFilter({ name, test: r => inverted !== r._raw.includes(input) });
-      }
-
+      addFilter(createFilter(name, inverted));
       setInput('');
     },
     [addFilter, setInput, inverted, input],
@@ -159,8 +196,9 @@ const GrepFilter: React.FC<{
 const Filters: React.FC<{
   selection: RowSelection;
   filters: ReadonlyArray<IFilter>;
+  onHighlight(filters: ReadonlySet<number>): void;
   onUpdate(filters: ReadonlyArray<IFilter>): void;
-}> = ({ selection, filters, onUpdate }) => {
+}> = ({ selection, filters, onUpdate, onHighlight }) => {
   const filterValues = React.useMemo(() => filters.map((_, i) => String(i)), [filters]);
   const filterNames = React.useMemo(() => filters.map(f => f.name), [filters]);
   const [selectedFilters, setSelectedFilters] = React.useState<ReadonlyArray<string>>([]);
@@ -180,6 +218,10 @@ const Filters: React.FC<{
     addFilter({ name: `Filter to ${rows.size} rows`, test: (_, i) => rows.has(i) });
   }, [addFilter, selection]);
 
+  const highlightSelection = React.useCallback(() => {
+    onHighlight(selection.entries());
+  }, [onHighlight, selection]);
+
   return (
     <>
       <GrepFilter addFilter={addFilter} />
@@ -189,10 +231,52 @@ const Filters: React.FC<{
         <button onClick={removeFilter} disabled={!selectedFilters.length}>
           Remove
         </button>
+        <button onClick={highlightSelection} disabled={selection.empty}>
+          Highlight Rows
+        </button>
         <button onClick={filterToSelection} disabled={selection.empty}>
-          Filter Selected Rows
+          Filter Rows
         </button>
       </div>
+    </>
+  );
+};
+
+/**
+ * Selects which log tags are shown in the data.
+ */
+const ConnectionSelector: React.FC<{
+  data: ILogItem[];
+  onUpdate: (tags: ReadonlyArray<(item: ILogItem) => boolean>) => void;
+}> = ({ data, onUpdate }) => {
+  const tags = React.useMemo(() => {
+    const s = new Set<string>();
+    for (const row of data) {
+      const connectionId = row.metadata && row.metadata.connectionId;
+      if (connectionId !== undefined) {
+        s.add(`${isDap(row) ? 'DAP #' : 'CDP #'}${connectionId}`);
+      }
+    }
+    return [...s];
+  }, [data]);
+
+  const onUpdateFromArray = React.useCallback(
+    (filters: ReadonlyArray<string>) =>
+      onUpdate(
+        filters.map(filter => {
+          const id = Number(filter.slice(5));
+          return filter.startsWith('DAP')
+            ? row => !isDap(row) || row.metadata.connectionId === id
+            : row => !isCdp(row) || row.metadata.connectionId === id;
+        }),
+      ),
+    [onUpdate],
+  );
+
+  return (
+    <>
+      <h3>Connection Filter</h3>
+      <MultiSelect values={tags} onUpdate={onUpdateFromArray} style={{ height: 75 }} />
     </>
   );
 };
@@ -213,7 +297,7 @@ const LevelSelector: React.FC<{
   return (
     <>
       <h3>Level Filter</h3>
-      <MultiSelect values={words} onUpdate={onUpdateFromWords} />
+      <MultiSelect values={words} onUpdate={onUpdateFromWords} style={{ height: 100 }} />
     </>
   );
 };

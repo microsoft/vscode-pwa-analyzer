@@ -7,11 +7,13 @@ import * as React from 'react';
 /**
  * Selects which log tags are shown in the data.
  */
-export const MultiSelect: React.FC<{
-  values: ReadonlyArray<string>;
-  labels?: ReadonlyArray<string>;
-  onUpdate: (tags: ReadonlyArray<string>) => void;
-}> = ({ values, onUpdate, labels }) => {
+export const MultiSelect: React.FC<
+  {
+    values: ReadonlyArray<string>;
+    labels?: ReadonlyArray<string>;
+    onUpdate: (tags: ReadonlyArray<string>) => void;
+  } & React.SelectHTMLAttributes<HTMLSelectElement>
+> = ({ values, onUpdate, labels, ...props }) => {
   const [selectedTags, updateTags] = React.useState<ReadonlyArray<string>>(values);
   const updateTagsCallback = React.useCallback(
     (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -40,6 +42,7 @@ export const MultiSelect: React.FC<{
       // tslint:disable-next-line:react-a11y-no-onchange
       onChange={updateTagsCallback}
       className="tag-selector"
+      {...props}
     >
       {[...values].sort().map((t, i) => (
         <option key={t} value={t} aria-selected={selectedTags.includes(t)}>

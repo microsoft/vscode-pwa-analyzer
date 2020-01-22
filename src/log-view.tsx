@@ -28,6 +28,7 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
     [file],
   );
 
+  const [highlightRows, setHighlightRows] = React.useState<ReadonlySet<number>>(new Set());
   const [selectedRows, setSelectedRows] = React.useState(RowSelection.empty);
   const [inspectedRow, setInspected] = React.useState<ILogItem<any> | null>(null);
   const closeInspector = React.useCallback(() => setInspected(null), [setInspected]);
@@ -43,8 +44,14 @@ export const LogView: React.FC<{ file: string }> = ({ file }) => {
         inspect={setInspected}
         selectedRows={selectedRows}
         setSelectedRows={setSelectedRows}
+        highlightRows={highlightRows}
       />
-      <Controls selection={selectedRows} data={rows} onUpdate={setRendered} />
+      <Controls
+        selection={selectedRows}
+        data={rows}
+        onUpdate={setRendered}
+        onHighlight={setHighlightRows}
+      />
     </>
   );
 };

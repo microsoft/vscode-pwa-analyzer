@@ -139,14 +139,14 @@ export const responseData = (item: ILogItem) => {
  */
 export const getReciprocalId = (item: ILogItem) => {
   if (isCdp(item)) {
-    return `cdp-${item.metadata.message.id}`;
+    return `cdp-${item.metadata.connectionId}-${item.metadata.message.id}`;
   }
 
   if (isDap(item)) {
     return isRequest(item)
-      ? `dap-${item.metadata.message.seq}`
+      ? `dap-${item.metadata.connectionId}-${item.metadata.message.seq}`
       : isResponse(item)
-      ? `dap-${item.metadata.message.request_seq}`
+      ? `dap-${item.metadata.connectionId}-${item.metadata.message.request_seq}`
       : undefined;
   }
 

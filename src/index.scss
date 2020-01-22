@@ -21,6 +21,9 @@ body {
 .controls {
   width: $controls-width;
   padding: 8px;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
 
   button,
   input[type='submit'] {
@@ -89,6 +92,10 @@ body {
   p {
     margin-bottom: 30px;
   }
+}
+
+.row-highlighted > .rdg-row {
+  background: #ff0;
 }
 
 .row-selected > .rdg-row {

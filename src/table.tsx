@@ -55,10 +55,11 @@ type RowRendererProps = IRowRendererProps<ILogItem> & {
 export const Table: React.FC<{
   epoch: number;
   rows: ILogItem<any>[];
+  highlightRows: ReadonlySet<number>;
   selectedRows: RowSelection;
   setSelectedRows(rows: RowSelection): void;
   inspect(row: ILogItem<any>): void;
-}> = ({ epoch, rows, inspect, selectedRows, setSelectedRows }) => {
+}> = ({ epoch, rows, inspect, highlightRows, selectedRows, setSelectedRows }) => {
   const columns = React.useMemo(() => createColumns(epoch, inspect), [rows, inspect]);
   const rowGetter = React.useCallback((i: number) => rows[i], [rows]);
 
@@ -92,14 +93,17 @@ export const Table: React.FC<{
     ({ renderBaseRow, ...props }) => (
       <div
         role="button"
-        className={classes(selectedRows.includes(props.row._index) && 'row-selected')}
+        className={classes(
+          selectedRows.includes(props.row._index) && 'row-selected',
+          highlightRows.has(props.row._index) && 'row-highlighted',
+        )}
         onClick={onRowClick}
         data-index={props.row._index}
       >
         {renderBaseRow(props)}
       </div>
     ),
-    [onRowClick, selectedRows],
+    [onRowClick, selectedRows, highlightRows],
   );
 
   const minWidth = window.innerWidth - 250;

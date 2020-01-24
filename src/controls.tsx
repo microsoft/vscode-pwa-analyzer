@@ -65,10 +65,8 @@ export const Controls: React.FC<{
         }
       }
 
-      for (const filter of connectionFilters) {
-        if (!filter(row)) {
-          return false;
-        }
+      if (!connectionFilters.some(f => f(row))) {
+        return false;
       }
 
       return true;

@@ -65,8 +65,10 @@ export const Controls: React.FC<{
         }
       }
 
-      if (!connectionFilters.some(f => f(row))) {
-        return false;
+      for (const filter of connectionFilters) {
+        if (!filter(row)) {
+          return false;
+        }
       }
 
       return true;
@@ -158,7 +160,7 @@ const GrepFilter: React.FC<{
   const add = React.useCallback(
     (evt: React.FormEvent) => {
       evt.preventDefault();
-      addFilter(createFilter(name, inverted));
+      addFilter(createFilter(input, inverted));
       setInput('');
     },
     [addFilter, setInput, inverted, input],
@@ -259,16 +261,23 @@ const ConnectionSelector: React.FC<{
   }, [data]);
 
   const onUpdateFromArray = React.useCallback(
-    (filters: ReadonlyArray<string>) =>
+    (enabled: ReadonlyArray<string>) =>
       onUpdate(
-        filters.map(filter => {
-          const id = Number(filter.slice(5));
-          return filter.startsWith('DAP')
-            ? row => !isDap(row) || row.metadata.connectionId === id
-            : row => !isCdp(row) || row.metadata.connectionId === id;
-        }),
+        tags
+          .map(tag => {
+            const id = Number(tag.slice(5));
+            const ok = enabled.includes(tag);
+            if (ok) {
+              return;
+            }
+
+            return tag.startsWith('DAP')
+              ? (row: ILogItem) => !isDap(row) || row.metadata.connectionId !== id
+              : (row: ILogItem) => !isCdp(row) || row.metadata.connectionId !== id;
+          })
+          .filter((fn): fn is (item: ILogItem) => boolean => !!fn),
       ),
-    [onUpdate],
+    [onUpdate, tags],
   );
 
   return (

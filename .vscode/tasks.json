@@ -12,6 +12,7 @@
     {
       "type": "npm",
       "script": "start",
+      "label": "npm: start",
       "group": "build",
       "isBackground": true,
       "problemMatcher": ["$ts-webpack-watch"]

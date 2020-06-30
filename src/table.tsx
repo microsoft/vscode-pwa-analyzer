@@ -6,7 +6,7 @@ import * as React from 'react';
 import { ILogItem, logLevelToWord } from './model';
 import { TableMetadata } from './table-metadata';
 import { TimestampSinceEpoch } from './timestamp';
-import ReactDataGrid, { Column, IRowRendererProps } from 'react-data-grid';
+import ReactDataGrid, { Column, RowRendererProps, Row } from 'react-data-grid';
 import { classes } from './helpers';
 import { RowSelection } from './row-selection';
 
@@ -20,14 +20,14 @@ const createColumns = (
       name: 'Level',
       resizable: false,
       width: 50,
-      formatter: ({ value }) => <>{logLevelToWord[value]}</>,
+      formatter: ({ row }) => <>{logLevelToWord[row.level]}</>,
     },
     {
       key: 'timestamp',
       name: 'Timestamp',
       resizable: true,
       width: 120,
-      formatter: ({ value }) => <TimestampSinceEpoch value={value} epoch={epoch} />,
+      formatter: ({ row }) => <TimestampSinceEpoch value={row.timestamp} epoch={epoch} />,
     },
     {
       key: 'tag',
@@ -48,8 +48,8 @@ const createColumns = (
  * The default provided props are missing `renderBaseRow`, but it actually
  * exists. Fix that!
  */
-type RowRendererProps = IRowRendererProps<ILogItem> & {
-  renderBaseRow: (props: IRowRendererProps<ILogItem>) => React.ReactElement;
+type RealRowRendererProps = RowRendererProps<ILogItem> & {
+  renderBaseRow: (props: RowRendererProps<ILogItem>) => React.ReactElement;
 };
 
 export const Table: React.FC<{
@@ -61,7 +61,6 @@ export const Table: React.FC<{
   inspect(row: ILogItem<any>): void;
 }> = ({ epoch, rows, inspect, highlightRows, selectedRows, setSelectedRows }) => {
   const columns = React.useMemo(() => createColumns(epoch, inspect), [rows, inspect]);
-  const rowGetter = React.useCallback((i: number) => rows[i], [rows]);
 
   const onRowClick = React.useCallback(
     (evt: React.MouseEvent) => {
@@ -89,8 +88,8 @@ export const Table: React.FC<{
     [selectedRows, setSelectedRows],
   );
 
-  const rowRenderer: React.FC<RowRendererProps> = React.useCallback(
-    ({ renderBaseRow, ...props }) => (
+  const rowRenderer: React.FC<RealRowRendererProps> = React.useCallback(
+    props => (
       <div
         role="button"
         className={classes(
@@ -100,7 +99,7 @@ export const Table: React.FC<{
         onClick={onRowClick}
         data-index={props.row._index}
       >
-        {renderBaseRow(props)}
+        <Row {...props} />
       </div>
     ),
     [onRowClick, selectedRows, highlightRows],
@@ -109,13 +108,12 @@ export const Table: React.FC<{
   const minWidth = window.innerWidth - 250;
 
   return (
-    <ReactDataGrid
+    <ReactDataGrid<ILogItem, '_index', unknown>
       columns={columns}
-      rowGetter={rowGetter}
-      rowsCount={rows.length}
+      rows={rows}
       rowRenderer={rowRenderer}
-      minHeight={window.innerHeight}
-      minWidth={minWidth}
+      height={window.innerHeight}
+      width={minWidth}
     />
   );
 };

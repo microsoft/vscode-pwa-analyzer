@@ -7,16 +7,7 @@
       "name": "launch and serve",
       "url": "http://localhost:8080",
       "webRoot": "${workspaceRoot}",
-      "server": {
-        "command": "npm start"
-      }
+      "preLaunchTask": "npm: start"
     },
-    {
-      "type": "pwa-chrome",
-      "request": "launch",
-      "name": "launch",
-      "url": "http://localhost:8080",
-      "webRoot": "${workspaceRoot}",
-    }
   ]
 }

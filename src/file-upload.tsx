@@ -27,7 +27,7 @@ export const FileUpload: React.FC<{ onChange(text: string): void }> = props => {
       return;
     }
 
-    if (file.name.endsWith('.json')) {
+    if (file.name.endsWith('.json') || file.name.endsWith('.txt')) {
       reader.readAsText(file);
     } else {
       reader.readAsArrayBuffer(file);

@@ -79,7 +79,7 @@ export const isRequest = (item: ILogItem) => {
   }
 
   if (isDap(item)) {
-    return item.metadata.message.type === 'request';
+    return item.metadata?.message?.type === 'request';
   }
 
   return false;
@@ -94,7 +94,7 @@ export const isResponse = (item: ILogItem) => {
   }
 
   if (isDap(item)) {
-    return item.metadata.message.type === 'response';
+    return item.metadata?.message?.type === 'response';
   }
 
   return false;
@@ -104,7 +104,7 @@ export const isResponse = (item: ILogItem) => {
  * Gets the request method and parameters.
  */
 export const requestParams = (item: ILogItem) => {
-  if (isDap(item) && item.metadata.message.type === 'event') {
+  if (isDap(item) && item.metadata?.message?.type === 'event') {
     return { method: item.metadata.message.event, params: item.metadata.message.body };
   }
 
@@ -146,8 +146,8 @@ export const getReciprocalId = (item: ILogItem) => {
     return isRequest(item)
       ? `dap-${item.metadata.connectionId}-${item.metadata.message.seq}`
       : isResponse(item)
-      ? `dap-${item.metadata.connectionId}-${item.metadata.message.request_seq}`
-      : undefined;
+        ? `dap-${item.metadata.connectionId}-${item.metadata.message.request_seq}`
+        : undefined;
   }
 
   return undefined;

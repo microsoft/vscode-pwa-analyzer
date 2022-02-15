@@ -68,14 +68,15 @@ export const isSend = ({ tag }: ILogItem) => tag === LogTag.CdpSend || tag === L
 
 export const isDap = ({ tag }: ILogItem) => tag === LogTag.DapSend || tag === LogTag.DapReceive;
 
-export const isCdp = ({ tag }: ILogItem) => tag === LogTag.CdpReceive || tag === LogTag.CdpSend;
+export const isCdp = ({ tag, metadata }: ILogItem) =>
+  (tag === LogTag.CdpReceive || tag === LogTag.CdpSend) && metadata.message;
 
 /**
  * Returns if the item is a CDP or DAP response.
  */
 export const isRequest = (item: ILogItem) => {
   if (isCdp(item)) {
-    return !!item.metadata.message.method;
+    return !!item.metadata.message?.method;
   }
 
   if (isDap(item)) {
@@ -146,8 +147,8 @@ export const getReciprocalId = (item: ILogItem) => {
     return isRequest(item)
       ? `dap-${item.metadata.connectionId}-${item.metadata.message.seq}`
       : isResponse(item)
-        ? `dap-${item.metadata.connectionId}-${item.metadata.message.request_seq}`
-        : undefined;
+      ? `dap-${item.metadata.connectionId}-${item.metadata.message.request_seq}`
+      : undefined;
   }
 
   return undefined;

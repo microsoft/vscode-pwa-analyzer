@@ -108,7 +108,7 @@ export const Table: React.FC<{
   const minWidth = window.innerWidth - 250;
 
   return (
-    <ReactDataGrid<ILogItem, '_index', unknown>
+    <ReactDataGrid
       columns={columns}
       rows={rows}
       rowRenderer={rowRenderer}

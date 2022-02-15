@@ -6,7 +6,6 @@
   "scripts": {
     "test": "npm run lint",
     "fmt": "prettier --write \"src/**/*.{ts,tsx,scss}\" && npm run lint -- --fix",
-    "lint": "tslint --project tsconfig.json \"src/**/*.{ts,tsx}\"",
     "start": "webpack-dev-server --open",
     "build": "webpack --config webpack.production.js"
   },
@@ -21,31 +20,28 @@
   },
   "homepage": "https://github.com/microsoft/vscode-pwa-analyzer#readme",
   "devDependencies": {
-    "@types/lodash-es": "^4.17.3",
-    "@types/pako": "^1.0.1",
-    "@types/react": "^16.9.41",
-    "@types/react-dom": "^16.9.8",
-    "bootstrap": "^4.5.0",
-    "css-loader": "^3.6.0",
-    "html-webpack-plugin": "^4.3.0",
-    "node-sass": "^4.14.1",
+    "@types/lodash-es": "^4.17.6",
+    "@types/pako": "^1.0.3",
+    "@types/react": "^17.0.39",
+    "@types/react-dom": "^17.0.11",
+    "bootstrap": "^5.1.3",
+    "css-loader": "^6.6.0",
+    "html-webpack-plugin": "^5.5.0",
+    "node-sass": "^7.0.1",
     "normalize.css": "^8.0.1",
-    "prettier": "^2.0.5",
-    "react": "^16.13.1",
+    "prettier": "^2.5.1",
+    "react": "^16.14.0",
     "react-data-grid": "^7.0.0-canary.16",
-    "react-dom": "^16.13.1",
-    "react-json-view": "^1.19.1",
-    "sass-loader": "^8.0.2",
-    "style-loader": "^1.2.1",
-    "ts-loader": "^7.0.5",
-    "tslint": "^6.1.2",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-microsoft-contrib": "^6.2.0",
-    "typescript": "^3.9.5",
-    "use-debounce": "^3.4.2",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "react-dom": "^16.14.0",
+    "react-json-view": "^1.21.3",
+    "sass-loader": "^12.6.0",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.5",
+    "use-debounce": "^7.0.1",
+    "webpack": "^5.69.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.4"
   },
   "prettier": {
     "trailingComma": "all",
@@ -55,7 +51,7 @@
     "tabWidth": 2
   },
   "dependencies": {
-    "lodash-es": "^4.17.15",
-    "pako": "^1.0.11"
+    "lodash-es": "^4.17.21",
+    "pako": "^2.0.4"
   }
 }

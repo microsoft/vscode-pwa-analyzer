@@ -11,8 +11,8 @@
     "newLine": "LF",
     "jsx": "react",
     "module": "esnext",
-    "target": "es6",
-    "lib": ["es6", "es7", "dom"],
+    "target": "ES2023",
+    "lib": ["ES2023", "dom"],
     "outDir": "dist",
   }
 }

@@ -6,7 +6,7 @@ import * as React from 'react';
 import { ILogItem, logLevelToWord } from './model';
 import { TableMetadata } from './table-metadata';
 import { TimestampSinceEpoch } from './timestamp';
-import ReactDataGrid, { Column, RowRendererProps, Row } from 'react-data-grid';
+import ReactDataGrid, { Column, RenderRowProps, Row } from 'react-data-grid';
 import { classes } from './helpers';
 import { RowSelection } from './row-selection';
 
@@ -20,14 +20,14 @@ const createColumns = (
       name: 'Level',
       resizable: false,
       width: 50,
-      formatter: ({ row }) => <>{logLevelToWord[row.level]}</>,
+      renderCell: ({ row }) => <>{logLevelToWord[row.level]}</>,
     },
     {
       key: 'timestamp',
       name: 'Timestamp',
       resizable: true,
       width: 120,
-      formatter: ({ row }) => <TimestampSinceEpoch value={row.timestamp} epoch={epoch} />,
+      renderCell: ({ row }) => <TimestampSinceEpoch value={row.timestamp} epoch={epoch} />,
     },
     {
       key: 'tag',
@@ -39,17 +39,9 @@ const createColumns = (
       key: 'metadata',
       name: 'Log Entry',
       resizable: true,
-      formatter: ({ row }) => <TableMetadata item={row} onClick={onLogEntryClick} />,
+      renderCell: ({ row }) => <TableMetadata item={row} onClick={onLogEntryClick} />,
     },
   ];
-};
-
-/**
- * The default provided props are missing `renderBaseRow`, but it actually
- * exists. Fix that!
- */
-type RealRowRendererProps = RowRendererProps<ILogItem> & {
-  renderBaseRow: (props: RowRendererProps<ILogItem>) => React.ReactElement;
 };
 
 export const Table: React.FC<{
@@ -88,32 +80,28 @@ export const Table: React.FC<{
     [selectedRows, setSelectedRows],
   );
 
-  const rowRenderer: React.FC<RealRowRendererProps> = React.useCallback(
-    props => (
-      <div
-        role="button"
+  const rowRenderer = React.useCallback(
+    (key: React.Key, props: RenderRowProps<ILogItem>) => (
+        <Row {...props}
+        key={key}
+        onClick={onRowClick}
+        data-index={props.row._index}
         className={classes(
           selectedRows.includes(props.row._index) && 'row-selected',
           highlightRows.has(props.row._index) && 'row-highlighted',
-        )}
-        onClick={onRowClick}
-        data-index={props.row._index}
-      >
-        <Row {...props} />
-      </div>
+          props.className,
+        )} />
     ),
     [onRowClick, selectedRows, highlightRows],
   );
 
-  const minWidth = window.innerWidth - 250;
 
   return (
     <ReactDataGrid
       columns={columns}
       rows={rows}
-      rowRenderer={rowRenderer}
-      height={window.innerHeight}
-      width={minWidth}
+      renderers={{ renderRow: rowRenderer }}
+      className="grid"
     />
   );
 };

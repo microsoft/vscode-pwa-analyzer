@@ -4,9 +4,7 @@
 
 import * as React from 'react';
 import { ILogItem, isRecipocalPair } from './model';
-
-// @ts-ignore
-import ReactJson from 'react-json-view';
+import JsonView from '@microlink/react-json-view';
 
 export const RowInspector: React.FC<{
   row: ILogItem<any>;
@@ -50,7 +48,7 @@ const Row: React.FC<{ value: ILogItem<any> }> = ({ value }) => {
   return (
     <>
       <h1>{value.tag}</h1>
-      <ReactJson src={sanitized} displayDataTypes={false} />
+      <JsonView src={sanitized} displayDataTypes={false} />
     </>
   );
 };

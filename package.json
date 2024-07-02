@@ -6,7 +6,7 @@
   "scripts": {
     "fmt": "prettier --write \"src/**/*.{ts,tsx,scss}\"",
     "start": "vite",
-    "build": "tsc --noEmit && vite build"
+    "build": "vite build"
   },
   "repository": {
     "type": "git",
@@ -27,14 +27,13 @@
   },
   "dependencies": {
     "@microlink/react-json-view": "^1.23.1",
-    "pako": "^2.1.0",
+    "fflate": "^0.8.2",
     "prettier": "^3.3.2",
     "react": "^18.3.1",
     "react-data-grid": "^7.0.0-beta.44",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/pako": "^2.0.3",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

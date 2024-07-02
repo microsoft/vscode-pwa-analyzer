@@ -48,7 +48,10 @@ export const TableMetadata: React.FC<{ item: ILogItem; onClick: (item: ILogItem)
   item,
   onClick: onClickRaw,
 }) => {
-  const onClick = React.useCallback(() => onClickRaw(item), [item, onClickRaw]);
+  const onClick = React.useCallback((evt: React.MouseEvent) => {
+    onClickRaw(item);
+    evt.stopPropagation();
+  }, [item, onClickRaw]);
 
   if (!protocolTags.includes(item.tag)) {
     return (

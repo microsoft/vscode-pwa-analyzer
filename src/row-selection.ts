@@ -2,7 +2,21 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { sortedIndex } from 'lodash-es';
+function sortedIndex(arr: ReadonlyArray<number>, value: number): number {
+  let low = 0;
+  let high = arr.length;
+
+  while (low < high) {
+    const mid = (low + high) >>> 1;
+    if (arr[mid] < value) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
+}
 
 export class RowSelection {
   /**
@@ -13,9 +27,11 @@ export class RowSelection {
   /**
    * Returns whether the selection is empty.
    */
-  public readonly empty = this.rows.length === 0;
+  public readonly empty: boolean;
 
-  protected constructor(private readonly rows: ReadonlyArray<number>, private lastRow?: number) {}
+  protected constructor(private readonly rows: ReadonlyArray<number>, private lastRow?: number) {
+    this.empty = rows.length === 0
+  }
 
   /**
    * Toggles whether the given row is selected or now.

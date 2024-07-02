@@ -2,8 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-$controls-width: 250px;
-
 * {
   margin: 0;
   padding: 0;
@@ -15,15 +13,20 @@ body {
 
 .root {
   display: flex;
-  flex-direction: row;
+}
+
+.grid {
+  flex-grow: 1;
+  height: 100vh;
 }
 
 .controls {
-  width: $controls-width;
+  width: 250px;
   padding: 8px;
   height: 100vh;
   overflow-y: auto;
   box-sizing: border-box;
+  flex-shrink: 0;
 
   button,
   input[type='submit'] {
@@ -94,12 +97,12 @@ body {
   }
 }
 
-.row-highlighted > .rdg-row {
-  background: #ff0;
+.row-highlighted {
+  background: rgb(108, 108, 6);
 }
 
-.row-selected > .rdg-row {
-  background: #eee;
+.row-selected {
+  background: #404040;
 }
 
 .inline-message {
@@ -110,20 +113,20 @@ body {
   text-overflow: ellipsis;
   display: block;
 
-  &-send::before {
+  &.inline-message-send::before {
     content: '←';
   }
 
-  &-receive::before {
+  &.inline-message-receive::before {
     content: '→';
   }
 
-  &-send::before,
-  &-receive::before {
+  &.inline-message-send::before,
+  &.inline-message-receive::before {
     opacity: 0.5;
   }
 
-  &-matched {
+  &.inline-message-matched {
     color: red;
   }
 }

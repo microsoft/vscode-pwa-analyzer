@@ -39,6 +39,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "normalize.css": "^8.0.1",
     "typescript": "^5.5.3",
-    "vite": "^7.0.5"
+    "vite": "^7.1.11"
   }
 }
